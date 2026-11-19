@@ -76,7 +76,7 @@ class Updater:
 
     def download_update(self, sha, workspace):
         archive_path = workspace / "update.zip"
-        url = "https://github.com/lzhoang2801/OpCore-Simplify/archive/{}.zip".format(
+        url = "https://github.com/NatureCN/OpCore-Simplify-CN-Mirror/archive/{}.zip".format(
             sha)
         self.utils.progress_bar("Update OpCore Simplify", self.update_steps, 0)
         if not self.fetcher.download_and_save_file(url, str(archive_path)):
@@ -204,7 +204,7 @@ class Updater:
         try:
             current = self.get_current_sha_version()
             print("Checking for updates...")
-            latest = self.github.get_commits("lzhoang2801", "OpCore-Simplify")
+            latest = self.github.get_commits("NatureCN", "OpCore-Simplify-CN-Mirror")
         except Exception as error:
             print(
                 "\033[1;93mCould not check for updates. You can continue using the installed version.\033[0m")

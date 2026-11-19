@@ -439,6 +439,8 @@ class OCPE:
                 self.u.request_input("Press Enter to main menu...")
 
 if __name__ == '__main__':
+    from Scripts import mirror
+    mirror.select()
     update_status = updater.Updater().run_update()
     if update_status == "updated":
         os.execv(sys.executable, [sys.executable] + sys.argv)

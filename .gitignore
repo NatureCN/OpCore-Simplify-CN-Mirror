@@ -161,3 +161,5 @@ cython_debug/
 
 *.DS_Store
 OCK_Files
+# 镜像选择的本地记忆（每个用户自己的，不要提交）
+mirror_config.json

@@ -17,6 +17,11 @@ else:
     import urllib2
     from urllib2 import urlopen, Request, URLError
 
+try:
+    from Scripts import mirror
+except ImportError:
+    import mirror
+
 MAX_ATTEMPTS = 3
 
 
@@ -40,21 +45,28 @@ class ResourceFetcher:
         }
         self.buffer_size = 16 * 1024
 
-    def _make_request(self, resource_url, timeout=10):
-        try:
-            headers = dict(self.request_headers)
-            headers["Accept-Encoding"] = "gzip, deflate"
-            
-            return urlopen(Request(resource_url, headers=headers), timeout=timeout, context=get_ssl_context())
-        except socket.timeout as e:
-            print("Timeout error: {}".format(e))
-        except ssl.SSLError as e:
-            print("SSL error: {}".format(e))
-        except (URLError, socket.gaierror) as e:
-            print("Connection error: {}".format(e))
-        except Exception as e:
-            print("Request failed: {}".format(e))
+    def _make_request(self, resource_url, timeout=15):
+        headers = dict(self.request_headers)
+        headers["Accept-Encoding"] = "gzip, deflate"
 
+        # 候选链：所选镜像 -> 备用镜像 -> GitHub 原始地址。
+        # 网页类地址只有一个候选（直连），见 mirror.candidates()。
+        candidates = mirror.candidates(resource_url)
+        errors = []
+
+        for index, url in enumerate(candidates):
+            try:
+                response = urlopen(Request(url, headers=headers), timeout=timeout, context=get_ssl_context())
+            except Exception as error:
+                errors.append((url, error))
+                continue
+
+            if index:
+                print("\033[1;93m  镜像 {} 连不上，已自动切换备用线路。\033[0m".format(mirror.describe()))
+            return response
+
+        for url, error in errors:
+            print("Request failed: {} ({})".format(url, error))
         return None
 
     def fetch_and_parse_content(self, resource_url, content_type=None):
@@ -186,6 +198,7 @@ class ResourceFetcher:
                     else:
                         print("Checksum mismatch! Removing file and retrying download...")
                         os.remove(destination_path)
+                        mirror.demote()
                         continue
                 else:
                     print("No SHA256 hash provided. Downloading file without verification.")
